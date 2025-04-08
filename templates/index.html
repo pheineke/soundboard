@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Soundboard</title>
+
+    <style>
+        .no-hover:hover {
+            background-color: inherit !important;
+        }
+    </style>
+
+    <script>
+        let editMode = false;
+        let sortable = null;
+    </script>
+
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script>
+        const socket = io();
+
+        function toggleSound(filename, button) {
+            socket.emit('play-sound', filename);
+
+            const isPlaying = button.classList.contains('bg-green-500');
+            document.querySelectorAll('.sound-btn').forEach(btn => {
+                btn.classList.remove('bg-green-500', 'text-white');
+            });
+
+            if (!isPlaying) {
+                button.classList.add('bg-green-500', 'text-white');
+            }
+        }
+
+        socket.on('sound-stopped', filename => {
+            document.querySelectorAll('.sound-btn').forEach(btn => {
+                if (btn.dataset.filename === filename) {
+                    btn.classList.remove('bg-green-500', 'text-white');
+                }
+            });
+        });
+
+        socket.on('sound-played', filename => {
+            document.querySelectorAll('.sound-btn').forEach(btn => {
+                btn.classList.remove('bg-green-500', 'text-white');
+                if (btn.dataset.filename === filename) {
+                    btn.classList.add('bg-green-500', 'text-white');
+                }
+            });
+        });
+
+        function toggleUploadForm() {
+            const form = document.getElementById('upload-form');
+            form.classList.toggle('hidden');
+        }
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const grid = document.querySelector('.grid');
+    
+            // Restore saved order
+            const savedOrder = JSON.parse(localStorage.getItem('soundOrder'));
+            if (savedOrder) {
+                savedOrder.forEach(filename => {
+                    const btn = grid.querySelector(`[data-filename="${filename}"]`);
+                    if (btn) grid.appendChild(btn);
+                });
+            }
+
+        });
+    </script>
+    <script>
+        function toggleEditMode() {
+            editMode = !editMode;
+            const grid = document.querySelector('.grid');
+            const editBtn = document.getElementById('edit-toggle');
+            const buttons = document.querySelectorAll('.sound-btn');
+            
+            buttons.forEach(btn => {
+                if (editMode) {
+                    btn.classList.remove('hover:bg-gray-600');
+                    btn.classList.add('active:bg-inherit', 'focus:outline-none', 'focus:ring-0');
+                } else {
+                    btn.classList.add('hover:bg-gray-600');
+                    btn.classList.remove('active:bg-inherit', 'focus:outline-none', 'focus:ring-0');
+                }
+            });
+
+            if (editMode) {
+                grid.classList.add('cursor-move');
+                editBtn.innerHTML = "<img class='w-6 h-6' src='{{ url_for('static', filename='icons/save-svgrepo-com.svg') }}'>";
+
+                // Add no-hover class to disable hover style
+                buttons.forEach(btn => {
+                    btn.classList.add('no-hover');
+                    btn.classList.remove('hover:bg-gray-600');
+                });
+
+                // Enable sorting
+                sortable = new Sortable(grid, {
+                    animation: 150,
+                    onEnd: () => {
+                        const newOrder = Array.from(grid.children).map(btn => btn.dataset.filename);
+                        localStorage.setItem('soundOrder', JSON.stringify(newOrder));
+                    }
+                });
+            } else {
+                grid.classList.remove('cursor-move');
+                editBtn.innerHTML = "<img class='w-6 h-6' src='{{ url_for('static', filename='icons/edit-3-svgrepo-com.svg') }}'>";
+
+                // Remove no-hover class
+                buttons.forEach(btn => {
+                    btn.classList.remove('no-hover');
+                    btn.classList.add('hover:bg-gray-600');
+                });
+
+
+                // Disable sorting
+                if (sortable) {
+                    sortable.destroy();
+                    sortable = null;
+                }
+            }
+        }
+
+    
+        // Modify toggleSound to do nothing in edit mode
+        function toggleSound(filename, button) {
+            if (editMode) {
+                cycleButtonColor(button); // Instead of playing sound, change color
+                return;
+            }
+    
+            socket.emit('play-sound', filename);
+    
+            const isPlaying = button.classList.contains('bg-green-500');
+            document.querySelectorAll('.sound-btn').forEach(btn => {
+                btn.classList.remove('bg-green-500', 'text-white');
+            });
+    
+            if (!isPlaying) {
+                button.classList.add('bg-green-500', 'text-white');
+            }
+        }
+    
+        // Cycle through colors when editing
+        const colorClasses = [
+            'bg-gray-700',
+            'bg-red-600',
+            'bg-blue-600',
+            'bg-green-600',
+            'bg-yellow-600',
+            'bg-purple-600',
+            'bg-pink-600'
+        ];
+    
+        function cycleButtonColor(button) {
+            let currentIndex = parseInt(button.dataset.colorIndex) || 0;
+
+            // Remove previous color class
+            colorClasses.forEach(cls => button.classList.remove(cls));
+
+            // Update index and wrap around
+            currentIndex = (currentIndex + 1) % colorClasses.length;
+
+            // Apply new color and save index
+            button.classList.add(colorClasses[currentIndex]);
+            button.dataset.colorIndex = currentIndex;
+        }
+
+
+
+    </script>
+    
+
+
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-gray-100 p-4 font-sans">
+    <div class="max-w-full mx-auto">
+        <!-- Header with a button to toggle the upload form -->
+        <div class="flex justify-between items-center mb-4">
+            <h1 class="text-3xl font-bold">🎵 Soundboard</h1>
+            <div class="flex items-center space-x-2">
+            
+            <!-- Container for the button + form -->
+            <div class="relative inline-block">
+                <button onclick="toggleUploadForm()" class="bg-blue-500 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
+                    <img class='w-6 h-6' src="{{ url_for('static', filename='icons/upload-svgrepo-com.svg') }}">
+                </button>
+            
+                <!-- The popup form shifted more to the right with added shadow -->
+                <form id="upload-form" action="/upload" method="post" enctype="multipart/form-data"
+                    class="absolute top-full left-[-225%] mt-3 bg-gray-800 p-4 rounded-lg shadow-[4px_4px_15px_4px_rgba(0,0,0,0.5)] w-64 hidden z-50">
+                    <label class="block mb-2 text-sm font-medium">Upload a sound file:</label>
+                    <input type="file" name="file"
+                        class="block w-full text-sm text-gray-300 bg-gray-700 border border-gray-600 rounded-lg cursor-pointer focus:outline-none">
+                    <button type="submit"
+                        class="mt-3 w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg">Upload</button>
+                </form>
+            </div>
+
+                
+                <button id="edit-toggle" onclick="toggleEditMode()" 
+                    class="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg select-none">
+                    <img class='w-6 h-6' src="{{ url_for('static', filename='icons/edit-3-svgrepo-com.svg') }}">
+                </button>
+            </div>
+        </div>
+        
+
+        
+        <!-- Upload form (hidden by default) -->
+        <!-- <form id="upload-form" action="/upload" method="post" enctype="multipart/form-data" class="mb-6 bg-gray-800 p-4 rounded-lg shadow max-w-md mx-auto hidden">
+            <label class="block mb-2 text-sm font-medium">Upload a sound file:</label>
+            <input type="file" name="file" class="block w-full text-sm text-gray-300 bg-gray-700 border border-gray-600 rounded-lg cursor-pointer focus:outline-none">
+            <button type="submit" class="mt-3 w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg">Upload</button>
+        </form> -->
+
+        <!-- Sound list (centered grid layout) -->
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 justify-center mx-auto">
+            {% for file in sound_files %}
+            <button
+                onclick="toggleSound('{{ file }}', this)"
+                data-filename="{{ file }}"
+                class="sound-btn bg-gray-700 hover:bg-gray-600 text-sm font-medium py-3 px-5 rounded-lg text-center w-full
+                    sm:text-base sm:py-4 sm:px-6 md:text-lg md:py-5 md:px-8 lg:text-xl lg:py-6 lg:px-10
+                    overflow-hidden text-ellipsis whitespace-nowrap 
+                    select-none
+                    focus:outline-none focus:ring-0 active:bg-inherit
+                    {{ 'bg-green-500 text-white' if file in currently_playing }}"
+                >
+                {% set file_title = file.split('.')[0] %}
+                {{ file_title }}
+            </button>
+            {% endfor %}
+        </div>
+    </div>
+</body>
+</html>
