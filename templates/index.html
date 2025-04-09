@@ -6,8 +6,17 @@
     <title>Soundboard</title>
 
     <style>
-        .no-hover:hover {
-            background-color: inherit !important;
+        /* Remove default focus and active styles */
+        .sound-btn:active,
+        .sound-btn:focus {
+            outline: none; /* Remove the outline */
+            box-shadow: none; /* Remove any focus/active box shadow */
+            background-color: inherit !important; /* Prevent background color change */
+        }
+    
+        /* Optional: Ensuring buttons retain the correct color when clicked */
+        .sound-btn.bg-green-500 {
+            background-color: #16a34a !important; /* Green background (same as Tailwind's bg-green-500) */
         }
     </style>
 
@@ -36,19 +45,19 @@
         socket.on('sound-stopped', filename => {
             document.querySelectorAll('.sound-btn').forEach(btn => {
                 if (btn.dataset.filename === filename) {
-                    btn.classList.remove('bg-green-500', 'text-white');
+                    btn.classList.remove('bg-green-500', 'text-white');  // Remove playing style
                 }
             });
         });
 
         socket.on('sound-played', filename => {
             document.querySelectorAll('.sound-btn').forEach(btn => {
-                btn.classList.remove('bg-green-500', 'text-white');
                 if (btn.dataset.filename === filename) {
-                    btn.classList.add('bg-green-500', 'text-white');
+                    btn.classList.add('bg-green-500', 'text-white');  // Add playing style
                 }
             });
         });
+
 
         function toggleUploadForm() {
             const form = document.getElementById('upload-form');
@@ -130,21 +139,27 @@
         // Modify toggleSound to do nothing in edit mode
         function toggleSound(filename, button) {
             if (editMode) {
-                cycleButtonColor(button); // Instead of playing sound, change color
+                cycleButtonColor(button); // In edit mode, cycle the button's color instead of playing sound
                 return;
             }
-    
+
+            // Emit play sound signal
             socket.emit('play-sound', filename);
-    
+
+            // Check if this button is already playing
             const isPlaying = button.classList.contains('bg-green-500');
+            
+            // Reset all button styles
             document.querySelectorAll('.sound-btn').forEach(btn => {
                 btn.classList.remove('bg-green-500', 'text-white');
             });
-    
+
+            // If not already playing, add the playing state class
             if (!isPlaying) {
                 button.classList.add('bg-green-500', 'text-white');
             }
         }
+
     
         // Cycle through colors when editing
         const colorClasses = [
@@ -224,18 +239,18 @@
         <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 justify-center mx-auto">
             {% for file in sound_files %}
             <button
-                onclick="toggleSound('{{ file }}', this)"
-                data-filename="{{ file }}"
-                class="sound-btn bg-gray-700 hover:bg-gray-600 text-sm font-medium py-3 px-5 rounded-lg text-center w-full
-                    sm:text-base sm:py-4 sm:px-6 md:text-lg md:py-5 md:px-8 lg:text-xl lg:py-6 lg:px-10
-                    overflow-hidden text-ellipsis whitespace-nowrap 
-                    select-none
-                    focus:outline-none focus:ring-0 active:bg-inherit
-                    {{ 'bg-green-500 text-white' if file in currently_playing }}"
-                >
-                {% set file_title = file.split('.')[0] %}
-                {{ file_title }}
-            </button>
+            onclick="toggleSound('{{ file }}', this)"
+            data-filename="{{ file }}"
+            class="sound-btn bg-gray-700 hover:bg-gray-600 text-sm font-medium py-3 px-5 rounded-lg text-center w-full
+                sm:text-base sm:py-4 sm:px-6 md:text-lg md:py-5 md:px-8 lg:text-xl lg:py-6 lg:px-10
+                overflow-hidden text-ellipsis whitespace-nowrap 
+                select-none
+                focus:outline-none focus:ring-0 active:bg-inherit
+                {{ 'bg-green-500 text-white' if file == currently_playing else '' }}"
+        >
+            {% set file_title = file.split('.')[0] %}
+            {{ file_title }}
+        </button>
             {% endfor %}
         </div>
     </div>
