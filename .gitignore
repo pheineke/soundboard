@@ -1,5 +1,39 @@
+# Python
 venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Go
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Audio files - keep these local only
+uploads/*.mp3
+uploads/*.wav
+uploads/*.ogg
+uploads/*.m4a
+uploads/*.flac
+
+# Keep uploads directory structure but not files
+uploads/*
+!uploads/.gitkeep
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
 
 # Added by cargo
-
 /target
