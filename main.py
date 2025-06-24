@@ -24,7 +24,18 @@ logger = logging.getLogger(__name__)
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 # --- Pygame Mixer ---
-pygame.mixer.init()
+
+DEVICE_NAME = "CABLE Input (VB-Audio Virtual Cable)" 
+
+try:
+    # Initialize the mixer on the specific virtual audio device
+    pygame.mixer.init(devicename=DEVICE_NAME)
+    logger.info(f"Pygame mixer initialized successfully on device: {DEVICE_NAME}")
+except pygame.error as e:
+    logger.error(f"Could not initialize Pygame mixer on specific device '{DEVICE_NAME}': {e}")
+    logger.warning("Falling back to default audio device.")
+    pygame.mixer.init() # Fallback to default if the specific one fails
+
 sound_cache = {}
 sound_cache_lock = threading.Lock()
 playing_channels = {}  # filepath: channel
