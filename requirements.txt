@@ -4,3 +4,6 @@ flask-socketio==5.3.6
 pygame==2.5.2
 werkzeug==2.3.7
 simple-websocket==0.10.1
+pyinstaller==6.1.0
+pydub==0.25.1
+sounddevice==0.4.6
