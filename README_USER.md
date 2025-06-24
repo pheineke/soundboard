@@ -166,7 +166,26 @@ For streaming/Discord use:
 
 ## 📜 License
 
-This soundboard is open source and free to use, modify, and distribute.
+This soundboard application is proprietary software. All rights reserved.
+
+- **Distribution Rights** - Only the original author has the right to distribute this software
+- **Personal Use Only** - This software is provided for personal use only
+- **No Redistribution** - Users may not redistribute, share, or distribute copies of this software
+- **No Modification Rights** - Users may not modify, reverse engineer, or create derivative works
+- **No Commercial Use** - This software may not be used for commercial purposes without explicit permission
+
+For licensing inquiries or permissions, please contact the author.
+
+## ⚠️ Security Notice
+
+**Important**: This application provides **no security measures** against potential attacks or vulnerabilities. By using this software, you acknowledge that:
+
+- **No security protection** - The web server runs without authentication or security hardening
+- **Network exposure** - When accessible over a network, it may be vulnerable to attacks
+- **Personal responsibility** - Any problems, security issues, or damages arising from the use of this application are solely the user's personal matter
+- **Use at your own risk** - The developers assume no liability for any issues that may occur
+
+For production environments or network-accessible deployments, consider implementing additional security measures such as firewalls, authentication, or VPN access.
 
 ---
 
